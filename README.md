@@ -1,1 +1,1 @@
-# aws-landingzoun-customization
+# aws-landingzone-customization
