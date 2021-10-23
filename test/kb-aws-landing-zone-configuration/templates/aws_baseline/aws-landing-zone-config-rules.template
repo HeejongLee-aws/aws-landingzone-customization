@@ -1,0 +1,757 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Enables an AWS Landing Zone account baseline AWS Config rules.
+
+Parameters:
+  EnableEncryptedVolumesRule:
+    Type: String
+    Description: "Enables the AWS managed encrypted-volumes config rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+    - true
+    - false
+  EnableRdsEncryptionRule:
+    Type: String
+    Description: "Enables the AWS managed rds-storage-encrypted config rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+    - true
+    - false
+  EnableS3PublicReadRule:
+    Type: String
+    Description: "Enables the AWS managed s3-bucket-public-read-prohibited config rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+    - true
+    - false
+  EnableS3PublicWriteRule:
+    Type: String
+    Description: "Enables the AWS managed s3-bucket-public-write-prohibited config rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+    - true
+    - false
+  EnableS3ServerSideEncryptionRule:
+    Type: String
+    Description: "Enables the AWS managed s3-bucket-server-side-encryption-enabled config rule. To enable, change the parameter value to true."
+    Default: false
+    AllowedValues:
+    - true
+    - false
+  EnableRestrictedCommonPortsRule:
+    Type: String
+    Description: "Enables the AWS managed restricted-common-ports config rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+    - true
+    - false
+  EnableRestrictedSshRule:
+    Type: String
+    Description: "Enables the AWS managed restricted-ssh config rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+    - true
+    - false
+  KMSId:
+    Type: String
+    Description: "[Optional] Id or ARN of the KMS key that is used to encrypt the volume."
+    Default: ""
+  MaximumExecutionFrequency:
+    Type: String
+    Default: TwentyFour_Hours
+    Description: The frequency that you want AWS Config to run evaluations for the
+      rule.
+    MinLength: '1'
+    ConstraintDescription: This parameter is required.
+    AllowedValues:
+    - One_Hour
+    - Three_Hours
+    - Six_Hours
+    - Twelve_Hours
+    - TwentyFour_Hours
+  blockedPort1:
+    Type: String
+    Default: '20'
+    Description: Blocked TCP port number.
+  blockedPort2:
+    Type: String
+    Default: '21'
+    Description: Blocked TCP port number.
+  blockedPort3:
+    Type: String
+    Default: '3389'
+    Description: Blocked TCP port number.
+  blockedPort4:
+    Type: String
+    Default: '3306'
+    Description: Blocked TCP port number.
+  blockedPort5:
+    Type: String
+    Default: '4333'
+    Description: Blocked TCP port number.
+  ###############################################
+  #  Add Parameter for additional config rule - Start #
+  ###############################################  
+  EnableRootAccessKeyCheckRule:
+    Type: String
+    Description: "Enables the AWS managed Root Access Key Check config rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EnableIamUserMfaCheckRule:
+    Type: String
+    Description: "Enables the AWS managed IAM User MFA enable check config rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EnableMfaConsoleLoginCheckRule:
+    Type: String
+    Description: "Enables the AWS managed MFA Console Login check config rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EnableUnusedCredentialCheckRule:
+    Type: String
+    Description: "Enables the AWS managed unused credential check config rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EnableAccesskeyRotateCheckRule:
+    Type: String
+    Description: "Enables the AWS managed accesskey rotation check config rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EnableS3BucketLoggingCheckRule:
+    Type: String
+    Description: "Enables the AWS managed S3 bucket logging check onfig rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EnableCoudtrailS3DataeventsRule:
+    Type: String
+    Description: "Enables the AWS managed cloudtrail s3 dataevents enabled config rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EnableS3BucketSslRequestsOnlyRule:
+    Type: String
+    Description: "Enables the AWS managed s3bucket ssl requests only config rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EnableELBLoggingRule:
+    Type: String
+    Description: "Enables the AWS managed config rule - elb logging enabled. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EnableELBDelProtectionRule:
+    Type: String
+    Description: "Enables the AWS managed config rule - elb delete protection rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EnableDefaultSGClosedRule:
+    Type: String
+    Description: "Enables the AWS managed config rule - VPC Default security group closed rule. To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  CloudTrailCloudWatchLogsEnabledRule:
+    Type: String
+    Description: "Enable CloudTrail-CloudWatch Logs Enabled Rule? To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  CloudTrailEnabledRule:
+    Type: String
+    Description: "Enable CloudTrail Enabled Rule? To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false 
+  CloudTrailLogFileValidayionEnabledRule:
+    Type: String
+    Description: "Enable CloudTrail Log File Validation Enabled Rule? To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  CMKBackingKeyRotationEnabledRule:
+    Type: String
+    Description: "Enable CMK Backing Key Rotation Enabled Rule? To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EC2StoppedInstanceRule:
+    Type: String
+    Description: "Enable EC2 Stopped Instance Rule? To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EC2SecurityGroupAttachedToENIRule:
+    Type: String
+    Description: "Enable EC2 SG Attached to ENI Rule? To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  IAMPolicyNoStatementsWithAdminAccessRule:
+    Type: String
+    Description: "Enable IAM Policy No Statement With Admin Access Rule? To disable, change the parameter value to false."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EnableEFSEncryptedRule:
+    Type: String
+    Description: "Checks whether Amazon EFS are configured to encrypt file data using AWS KMS. The rule is NON_COMPLIANT if the Encrypted key is set to False on DescribeFileSystems or, if specified, KmsKeyId key on DescribeFileSystems is not matching KmsKeyId parameter."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  EnableVPCFlowLogCheckRule:
+    Type: String
+    Description: "Verify that the Amazon Virtual Private Cloud flow log is present and enabled for Amazon VPC."
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  ###############################################
+  #  Add Parameter for additional config rule - End #
+  ###############################################
+
+Conditions:
+  EnableEncryptedVolumes: !Equals
+    - !Ref EnableEncryptedVolumesRule
+    - 'true'
+  EnableRdsEncryption: !Equals
+    - !Ref EnableRdsEncryptionRule
+    - 'true'
+  EnableS3PublicRead: !Equals
+    - !Ref EnableS3PublicReadRule
+    - 'true'
+  EnableS3PublicWrite: !Equals
+    - !Ref EnableS3PublicWriteRule
+    - 'true'
+  EnableS3ServerSideEncryption: !Equals
+    - !Ref EnableS3ServerSideEncryptionRule
+    - 'true'
+  EnableRestrictedCommonPortsPolicy: !Equals
+    - !Ref EnableRestrictedCommonPortsRule
+    - 'true'
+  EnableRestrictedSshPolicy: !Equals
+    - !Ref EnableRestrictedSshRule
+    - 'true'
+  HasKMSKeyId: !Not
+    - !Equals
+      - !Ref KMSId
+      - ""
+  blockedPort1:
+    Fn::Not:
+    - Fn::Equals:
+      - ''
+      - Ref: blockedPort1
+  blockedPort2:
+    Fn::Not:
+    - Fn::Equals:
+      - ''
+      - Ref: blockedPort2
+  blockedPort3:
+    Fn::Not:
+    - Fn::Equals:
+      - ''
+      - Ref: blockedPort3
+  blockedPort4:
+    Fn::Not:
+    - Fn::Equals:
+      - ''
+      - Ref: blockedPort4
+  blockedPort5:
+    Fn::Not:
+    - Fn::Equals:
+      - ''
+      - Ref: blockedPort5
+  ###### Add Start ##################
+  EnableRootAccessKeyCheck: !Equals
+    - !Ref EnableRootAccessKeyCheckRule
+    - 'true'
+  EnableIamUserMfaCheck: !Equals
+    - !Ref EnableIamUserMfaCheckRule
+    - 'true'
+  EnableIamUserMfaCheck: !Equals
+    - !Ref EnableIamUserMfaCheckRule
+    - 'true'
+  EnableMfaConsoleLoginCheck: !Equals
+    - !Ref EnableMfaConsoleLoginCheckRule
+    - 'true' 
+  EnableUnusedCredentialCheck: !Equals
+    - !Ref EnableUnusedCredentialCheckRule
+    - 'true' 
+  EnableAccesskeyRotateCheck: !Equals
+    - !Ref EnableAccesskeyRotateCheckRule
+    - 'true' 
+  EnableS3BucketLoggingCheck: !Equals
+    - !Ref EnableS3BucketLoggingCheckRule
+    - 'true' 
+  EnableCoudtrailS3DataeventsCheck: !Equals
+    - !Ref EnableCoudtrailS3DataeventsRule
+    - 'true' 
+  EnableS3BucketSslRequestsOnlyCheck: !Equals
+    - !Ref EnableS3BucketSslRequestsOnlyRule
+    - 'true' 
+  EnableELBLoggingRuleCheck: !Equals
+    - !Ref EnableELBLoggingRule
+    - 'true'
+  EnableELBDelProtectionRuleCheck: !Equals
+    - !Ref EnableELBDelProtectionRule
+    - 'true'
+  EnableDefaultSGClosedRuleCheck: !Equals
+    - !Ref EnableDefaultSGClosedRule
+    - 'true'
+  CloudTrailCloudWatchLogsEnabled: !Equals
+    - !Ref CloudTrailCloudWatchLogsEnabledRule
+    - 'true'
+  CloudTrailEnabled: !Equals
+    - !Ref CloudTrailEnabledRule
+    - 'true'
+  CloudTrailLogFileValidayionEnabled: !Equals
+    - !Ref CloudTrailLogFileValidayionEnabledRule
+    - 'true'
+  CMKBackingKeyRotationEnabled: !Equals
+    - !Ref CMKBackingKeyRotationEnabledRule
+    - 'true'
+  EC2StoppedInstance: !Equals
+    - !Ref EC2StoppedInstanceRule
+    - 'true'
+  EC2SecurityGroupAttachedToENI: !Equals
+    - !Ref EC2SecurityGroupAttachedToENIRule
+    - 'true'
+  IAMPolicyNoStatementsWithAdminAccess: !Equals
+    - !Ref IAMPolicyNoStatementsWithAdminAccessRule
+    - 'true'
+  EnableEFSEncrypted: !Equals
+    - !Ref EnableEFSEncryptedRule
+    - 'true'
+  EnableVPCFlowLogCheck: !Equals
+    - !Ref EnableVPCFlowLogCheckRule
+    - 'true'
+  ###### Add End ##################
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Config Rules
+      Parameters:
+      - EnableEncryptedVolumesRule
+      - EnableRdsEncryptionRule
+      - EnableS3PublicReadRule
+      - EnableS3PublicWriteRule
+      - EnableS3ServerSideEncryptionRule
+      - EnableRestrictedCommonPortsRule
+      - EnableRestrictedSshRule
+      # Add Parameter for additional config rule -start
+      - EnableRootAccessKeyCheckRule
+      - EnableIamUserMfaCheckRule
+      - EnableMfaConsoleLoginCheckRule
+      - EnableUnusedCredentialCheckRule
+      - EnableAccesskeyRotateCheckRule
+      - EnableS3BucketLoggingCheckRule
+      - EnableCoudtrailS3DataeventsRule
+      - EnableS3BucketSslRequestsOnlyRule
+      - EnableELBLoggingRule
+      - EnableELBDelProtectionRule
+      - EnableDefaultSGClosedRule
+      - CloudTrailCloudWatchLogsEnabledRule
+      - CloudTrailEnabledRule
+      - CloudTrailLogFileValidayionEnabledRule
+      - CMKBackingKeyRotationEnabledRule
+      - EC2StoppedInstanceRule
+      - EC2SecurityGroupAttachedToENIRule
+      - IAMPolicyNoStatementsWithAdminAccessRule
+      - EnableEFSEncryptedRule
+      - EnableVPCFlowLogCheckRule
+      # Add Parameter for additional config rule -end
+    - Label:
+        default: Misc Parameters
+      Parameters:
+      - KMSId
+      - MaximumExecutionFrequency
+    - Label:
+        default: Restricted Common Ports
+      Parameters:
+      - blockedPort1
+      - blockedPort2
+      - blockedPort3
+      - blockedPort4
+      - blockedPort5
+
+Resources:
+  CheckForEncryptedVolumes:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableEncryptedVolumes
+    Properties:
+      Description: Checks whether EBS volumes that are in an attached state are encrypted.
+      Source:
+        Owner: AWS
+        SourceIdentifier: ENCRYPTED_VOLUMES
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::EC2::Volume
+      InputParameters:
+        kmsId: !If
+          - HasKMSKeyId
+          - !Ref KMSId
+          - !Ref AWS::NoValue
+
+  CheckForRdsEncryption:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableRdsEncryption
+    Properties:
+      Description: Checks whether storage encryption is enabled for your RDS DB instances.
+      Source:
+        Owner: AWS
+        SourceIdentifier: RDS_STORAGE_ENCRYPTED
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::RDS::DBInstance
+      InputParameters:
+        kmsId: !If
+          - HasKMSKeyId
+          - !Ref KMSId
+          - !Ref AWS::NoValue
+
+  CheckForS3PublicRead:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableS3PublicRead
+    Properties:
+      Description: Checks that your S3 buckets do not allow public read access. If an S3 bucket policy or bucket ACL allows public read access, the bucket is noncompliant.
+      Source:
+        Owner: AWS
+        SourceIdentifier: S3_BUCKET_PUBLIC_READ_PROHIBITED
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::S3::Bucket
+
+  CheckForS3PublicWrite:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableS3PublicWrite
+    Properties:
+      Description: Checks that your S3 buckets do not allow public write access. If an S3 bucket policy or bucket ACL allows public write access, the bucket is noncompliant.
+      Source:
+        Owner: AWS
+        SourceIdentifier: S3_BUCKET_PUBLIC_WRITE_PROHIBITED
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::S3::Bucket
+
+  CheckForS3ServerSideEncryption:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableS3ServerSideEncryption
+    Properties:
+      Description: Checks for explicit denies on put-object requests without server side encryption.
+      Source:
+        Owner: AWS
+        SourceIdentifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::S3::Bucket
+
+  CheckForRestrictedCommonPortsPolicy:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableRestrictedCommonPortsPolicy
+    Properties:
+      Description: Checks whether security groups that are in use disallow unrestricted
+        incoming TCP traffic to the specified ports.
+      InputParameters:
+        blockedPort1:
+          Fn::If:
+          - blockedPort1
+          - Ref: blockedPort1
+          - Ref: AWS::NoValue
+        blockedPort2:
+          Fn::If:
+          - blockedPort2
+          - Ref: blockedPort2
+          - Ref: AWS::NoValue
+        blockedPort3:
+          Fn::If:
+          - blockedPort3
+          - Ref: blockedPort3
+          - Ref: AWS::NoValue
+        blockedPort4:
+          Fn::If:
+          - blockedPort4
+          - Ref: blockedPort4
+          - Ref: AWS::NoValue
+        blockedPort5:
+          Fn::If:
+          - blockedPort5
+          - Ref: blockedPort5
+          - Ref: AWS::NoValue
+      Scope:
+        ComplianceResourceTypes:
+        - AWS::EC2::SecurityGroup
+      Source:
+        Owner: AWS
+        SourceIdentifier: RESTRICTED_INCOMING_TRAFFIC
+
+  CheckForRestrictedSshPolicy:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableRestrictedSshPolicy
+    Properties:
+      Description: Checks whether security groups that are in use disallow unrestricted
+        incoming SSH traffic.
+      Scope:
+        ComplianceResourceTypes:
+        - AWS::EC2::SecurityGroup
+      Source:
+        Owner: AWS
+        SourceIdentifier: INCOMING_SSH_DISABLED
+  ###############################################
+  #  Add Resources for additional config rule - Start #
+  ###############################################
+  CheckRootAccessKey:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableRootAccessKeyCheck
+    Properties:
+      Description: Checks whether the root user access key is available.
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_ROOT_ACCESS_KEY_CHECK
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::IAM::Accesskey
+
+  CheckIamUserMfaEnable:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableIamUserMfaCheck
+    Properties:
+      Description: Checks whether the AWS Identity and Access Management users have multi-factor authentication (MFA) enabled.
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_USER_MFA_ENABLED
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::IAM::User
+  CheckMfaConsoleLogin:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableMfaConsoleLoginCheck
+    Properties:
+      Description: Checks whether AWS Multi-Factor Authentication (MFA) is enabled for all AWS Identity and Access Management (IAM) users that use a console password
+      Source:
+        Owner: AWS
+        SourceIdentifier: MFA_ENABLED_FOR_IAM_CONSOLE_ACCESS
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::IAM::User
+  CheckUnusedCredential:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableUnusedCredentialCheck
+    Properties:
+      Description: Checks whether your AWS Identity and Access Management (IAM) users have passwords or active access keys that have not been used within the specified number of days you provided.
+      InputParameters:
+        maxCredentialUsageAge: "90"
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_USER_UNUSED_CREDENTIALS_CHECK
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::IAM::User
+
+  CheckAccesskeyRotate:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableAccesskeyRotateCheck
+    Properties:
+      Description: Checks whether the active access keys are rotated within the number of days specified in maxAccessKeyAge.
+      InputParameters:
+        maxAccessKeyAge: "90"
+      Source:
+        Owner: AWS
+        SourceIdentifier: ACCESS_KEYS_ROTATED
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::IAM::Accesskey
+  
+  EnableS3BucketLogging:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableS3BucketLoggingCheck
+    Properties:
+      Description: Checks whether logging is enabled for your S3 buckets.
+      Source:
+        Owner: AWS
+        SourceIdentifier: S3_BUCKET_LOGGING_ENABLED
+      Scope:
+         ComplianceResourceTypes:
+          - AWS::S3::Bucket
+
+  CheckCoudtrailS3Dataevents:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableCoudtrailS3DataeventsCheck
+    Properties:
+      Description: Checks whether at least one AWS CloudTrail trail is logging Amazon S3 data events for all S3 buckets.
+      Source:
+        Owner: AWS
+        SourceIdentifier: CLOUDTRAIL_S3_DATAEVENTS_ENABLED
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::S3::Bucket
+  CheckS3BucketSslRequestsOnly:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableS3BucketSslRequestsOnlyCheck
+    Properties:
+      Description: Checks whether S3 buckets have policies that require requests to use Secure Socket Layer (SSL).
+      Source:
+        Owner: AWS
+        SourceIdentifier: S3_BUCKET_SSL_REQUESTS_ONLY
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::S3::Bucket
+  CheckELBLogging:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableELBLoggingRuleCheck
+    Properties:
+      Description: Checks whether the Application Load Balancers and the Classic Load Balancers have logging enabled.
+      Source:
+        Owner: AWS
+        SourceIdentifier: ELB_LOGGING_ENABLED
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::ElasticLoadBalancing::LoadBalancer
+          - AWS::ElasticLoadBalancingV2::LoadBalancer
+  CheckELBDelProtection:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableELBDelProtectionRuleCheck
+    Properties:
+      Description: Checks whether an Elastic Load Balancer has deletion protection enabled. The rule is NON_COMPLIANT if deletion_protection.enabled is false.
+      Source:
+        Owner: AWS
+        SourceIdentifier: ELB_DELETION_PROTECTION_ENABLED
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::ElasticLoadBalancingV2::LoadBalancer
+  CheckDefaultSGClosed:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableDefaultSGClosedRuleCheck
+    Properties:
+      Description: Checks that the default security group of any Amazon Virtual Private Cloud‎ (VPC) does not allow inbound or outbound traffic. The rule is non-compliant if the default security group has one or more inbound or outbound traffic.
+      Source:
+        Owner: AWS
+        SourceIdentifier: VPC_DEFAULT_SECURITY_GROUP_CLOSED
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::EC2::SecurityGroup 
+  CheckCloudTrailCloudWatchLogsEnabled:
+    Type: AWS::Config::ConfigRule
+    Condition: CloudTrailCloudWatchLogsEnabled
+    Properties:
+      Description: Checks whether AWS CloudTrail trails are configured to send logs to Amazon CloudWatch Logs. The trail is NON_COMPLIANT if the CloudWatchLogsLogGroupArn property of the trail is empty.
+      Source:
+        Owner: AWS
+        SourceIdentifier: CLOUD_TRAIL_CLOUD_WATCH_LOGS_ENABLED
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::CloudFormation::Stack
+  CheckCloudTrailEnabled:
+    Type: AWS::Config::ConfigRule
+    Condition: CloudTrailEnabled
+    Properties:
+      Description: Checks whether AWS CloudTrail is enabled in your AWS account. Optionally, you can specify which S3 bucket, SNS topic, and Amazon CloudWatch Logs ARN to use.
+      Source:
+        Owner: AWS
+        SourceIdentifier: CLOUD_TRAIL_ENABLED
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::CloudTrail::Trail
+  CheckCloudTrailLogFileValidayionEnabled:
+    Type: AWS::Config::ConfigRule
+    Condition: CloudTrailLogFileValidayionEnabled
+    Properties:
+      Description: Checks whether AWS CloudTrail creates a signed digest file with logs. AWS recommends that the file validation must be enabled on all trails. The rule is NON_COMPLIANT if the validation is not enabled.
+      Source:
+        Owner: AWS
+        SourceIdentifier: CLOUD_TRAIL_LOG_FILE_VALIDATION_ENABLED
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::CloudTrail::Trail
+  CheckCMKBackingKeyRotationEnabledRuleEnabled:
+    Type: AWS::Config::ConfigRule
+    Condition: CMKBackingKeyRotationEnabled
+    Properties:
+      Description: Checks that key rotation is enabled for each customer master key (CMK). The rule is COMPLIANT, if the key rotation is enabled for specific key object. The rule is not applicable to CMKs that have imported key material.
+      Source:
+        Owner: AWS
+        SourceIdentifier: CMK_BACKING_KEY_ROTATION_ENABLED
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::KMS::Key
+  CheckEC2StoppedInstanceRule:
+    Type: AWS::Config::ConfigRule
+    Condition: EC2StoppedInstance
+    Properties:
+      Description: Checks whether there are instances stopped for more than the allowed number of days. The instance is NON_COMPLIANT if the state of the ec2 instance has been stopped for longer than the allowed number of days.
+      Source:
+        Owner: AWS
+        SourceIdentifier: EC2_STOPPED_INSTANCE
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::EC2::Instance
+  CheckEC2SecurityGroupAttachedToENIRule:
+    Type: AWS::Config::ConfigRule
+    Condition: EC2SecurityGroupAttachedToENI
+    Properties:
+      Description: Checks that security groups are attached to Amazon Elastic Compute Cloud (Amazon EC2) instances or to an elastic network interface.
+      Source:
+        Owner: AWS
+        SourceIdentifier: EC2_SECURITY_GROUP_ATTACHED_TO_ENI
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::EC2::NetworkInterface
+  CheckIAMPolicyNoStatementsWithAdminAccessRule:
+    Type: AWS::Config::ConfigRule
+    Condition: IAMPolicyNoStatementsWithAdminAccess
+    Properties:
+      Description: Checks the IAM policies that you create, such as identity-based or resource-based policies, for Allow statements that grant permissions to all actions on all resources.
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::IAM::Policy
+  CheckEnableEFSEncryptedRule:
+    Type: AWS::Config::ConfigRule
+    Condition: EnableEFSEncrypted
+    Properties:
+      Description: Checks whether Amazon EFS are configured to encrypt file data using AWS KMS. The rule is NON_COMPLIANT if the Encrypted key is set to False on DescribeFileSystems or, if specified, KmsKeyId key on DescribeFileSystems is not matching KmsKeyId parameter.
+      Source:
+        Owner: AWS
+        SourceIdentifier: EFS_ENCRYPTED_CHECK
+  EnableVPCFlowLog:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      Description: Checks whether Amazon Virtual Private Cloud flow logs are found and enabled for Amazon VPC.
+      InputParameters:
+        trafficType: ACCEPT
+      Source: 
+        Owner: AWS
+        SourceIdentifier: VPC_FLOW_LOGS_ENABLED   
+
+  ###############################################
+  #  Add Resources for additional config rule - End #
+  ###############################################
+  

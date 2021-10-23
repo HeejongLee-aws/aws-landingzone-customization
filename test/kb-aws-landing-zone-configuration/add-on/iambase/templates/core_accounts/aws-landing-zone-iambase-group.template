@@ -1,0 +1,251 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Provision default IAM Group for users
+   Policy - permission to assume role
+   Role - administrator, readonly, engineer, iam-admin
+
+Parameters:
+  NamingConvention:
+    Type: String
+    Description: Role Name starts with this.
+  LoginAccountId:
+    Type: String
+    Description: IAM User Login account
+Resources:
+
+  AdministratorGroup:
+    Type: AWS::IAM::Group
+    Properties: 
+      GroupName: !Sub ${NamingConvention}-com-administrator-group
+      Path: /
+
+  RoleAssumePolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: AdministratorGroup
+    Properties:
+      PolicyName: !Sub ${NamingConvention}-com-administrator-policy
+      PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: AssumeRole
+              Effect: Allow
+              Action:
+              - sts:AssumeRole
+              Resource: !Sub "arn:aws:iam::*:role/${NamingConvention}-com-administrator"
+      Groups:
+      - !Ref AdministratorGroup
+  
+  ReadOnlyGroup:
+    Type: AWS::IAM::Group
+    Properties: 
+      GroupName: !Sub ${NamingConvention}-com-readonly-group
+      Path: /
+
+  ReadOnlyRoleAssumePolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: ReadOnlyGroup
+    Properties:
+      PolicyName: !Sub ${NamingConvention}-com-readonly-policy
+      PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: AssumeRole
+              Effect: Allow
+              Action:
+              - sts:AssumeRole
+              Resource: !Sub "arn:aws:iam::*:role/${NamingConvention}-com-readonly"
+      Groups:
+      - !Ref ReadOnlyGroup
+
+  IAMAdminGroup:
+    Type: AWS::IAM::Group
+    Properties: 
+      GroupName: !Sub ${NamingConvention}-com-iam-admin-group
+      Path: /
+
+  IAMAdminRoleAssumePolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: IAMAdminGroup
+    Properties:
+      PolicyName: !Sub ${NamingConvention}-com-iam-admin-policy
+      PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: AssumeRole
+              Effect: Allow
+              Action:
+              - sts:AssumeRole
+              Resource: !Sub "arn:aws:iam::*:role/${NamingConvention}-com-iam-admin"
+      Groups:
+      - !Ref IAMAdminGroup
+
+  MIGEngGroup:
+    Type: AWS::IAM::Group
+    Properties: 
+      GroupName: !Sub ${NamingConvention}-mig-engineer-group
+      Path: /
+
+  MIGEngnRoleAssumePolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: MIGEngGroup
+    Properties:
+      PolicyName: !Sub ${NamingConvention}-mig-engineer-policy
+      PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: AssumeRole
+              Effect: Allow
+              Action:
+              - sts:AssumeRole
+              Resource: !Sub "arn:aws:iam::*:role/${NamingConvention}-mig-engineer"
+      Groups:
+      - !Ref MIGEngGroup
+
+  # Security Administrator Group
+  SecAdminGroup:
+    Type: AWS::IAM::Group
+    Properties: 
+      GroupName: !Sub ${NamingConvention}-com-sec-admin-group
+      Path: /
+
+  SecAdminRoleAssumePolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: SecAdminGroup
+    Properties:
+      PolicyName: !Sub ${NamingConvention}-com-sec-admin-policy
+      PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: AssumeRole
+              Effect: Allow
+              Action:
+              - sts:AssumeRole
+              Resource: 
+                - !Sub "arn:aws:iam::*:role/${NamingConvention}-com-sec-admin"
+                - !Sub "arn:aws:iam::*:role/${NamingConvention}-com-readonly"
+      Groups:
+      - !Ref SecAdminGroup
+  
+  # Permission for changing password, managing access key & MFA in iam account
+  SelfServicePolicy:
+    Type: AWS::IAM::Policy
+    DependsOn:
+      - AdministratorGroup
+      - ReadOnlyGroup
+      - IAMAdminGroup
+      - MIGEngGroup
+      - SecAdminGroup
+    Properties:
+      PolicyName: !Sub ${NamingConvention}-com-emp-policy
+      PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: AllowViewAccountInfo
+              Effect: Allow
+              Action:
+              - iam:GetAccountPasswordPolicy
+              - iam:GetAccountSummary
+              - iam:ListVirtualMFADevices
+              Resource: "*"
+            - Sid: AllowManageOwnPasswords
+              Effect: Allow
+              Action:
+              - iam:ChangePassword
+              - iam:GetUser
+              Resource: arn:aws:iam::*:user/${aws:username}
+            - Sid: AllowManageOwnAccessKeys
+              Effect: Allow
+              Action:
+              - iam:CreateAccessKey
+              - iam:DeleteAccessKey
+              - iam:ListAccessKeys
+              - iam:UpdateAccessKey
+              Resource: arn:aws:iam::*:user/${aws:username}
+            - Sid: AllowManageOwnSigningCertificates
+              Effect: Allow
+              Action:
+              - iam:DeleteSigningCertificate
+              - iam:ListSigningCertificates
+              - iam:UpdateSigningCertificate
+              - iam:UploadSigningCertificate
+              Resource: arn:aws:iam::*:user/${aws:username}
+            - Sid: AllowManageOwnSSHPublicKeys
+              Effect: Allow
+              Action:
+              - iam:DeleteSSHPublicKey
+              - iam:GetSSHPublicKey
+              - iam:ListSSHPublicKeys
+              - iam:UpdateSSHPublicKey
+              - iam:UploadSSHPublicKey
+              Resource: arn:aws:iam::*:user/${aws:username}
+            - Sid: AllowManageOwnGitCredentials
+              Effect: Allow
+              Action:
+              - iam:CreateServiceSpecificCredential
+              - iam:DeleteServiceSpecificCredential
+              - iam:ListServiceSpecificCredentials
+              - iam:ResetServiceSpecificCredential
+              - iam:UpdateServiceSpecificCredential
+              Resource: arn:aws:iam::*:user/${aws:username}
+            - Sid: AllowManageOwnVirtualMFADevice
+              Effect: Allow
+              Action:
+              - iam:CreateVirtualMFADevice
+              - iam:DeleteVirtualMFADevice
+              Resource: arn:aws:iam::*:mfa/${aws:username}
+            - Sid: AllowManageOwnUserMFA
+              Effect: Allow
+              Action:
+              - iam:DeactivateMFADevice
+              - iam:EnableMFADevice
+              - iam:ListMFADevices
+              - iam:ResyncMFADevice
+              Resource: arn:aws:iam::*:user/${aws:username}
+            - Sid: BlockMostAccessUnlessSignedInWithMFA
+              Effect: Deny
+              NotAction:
+              - iam:CreateVirtualMFADevice
+              - iam:EnableMFADevice
+              - iam:ListMFADevices
+              - iam:ListUsers
+              - iam:ListVirtualMFADevices
+              - iam:ResyncMFADevice
+              Resource: "*"
+              Condition:
+                BoolIfExists:
+                  aws:MultiFactorAuthPresent: 'false'
+      Groups:
+      - !Ref AdministratorGroup
+      - !Ref ReadOnlyGroup
+      - !Ref IAMAdminGroup
+      - !Ref MIGEngGroup
+      - !Ref SecAdminGroup
+
+  DenyAllFromOutside:
+    Type: AWS::IAM::Policy
+    DependsOn:
+      - AdministratorGroup
+      - ReadOnlyGroup
+      - IAMAdminGroup
+      - MIGEngGroup
+      - SecAdminGroup
+    Properties: 
+      PolicyName: !Sub ${NamingConvention}-com-deny-all
+      PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: DenyAllWhenConnectionFromUnknownIP
+              Effect: Deny
+              Action: "*"           
+              Resource: "*"
+              Condition: 
+                NotIpAddress: 
+                  aws:SourceIp: 
+                    - 210.92.173.101/32
+                Bool: 
+                  aws:ViaAWSService: "false"
+      Groups:
+      - !Ref AdministratorGroup
+      - !Ref ReadOnlyGroup
+      - !Ref IAMAdminGroup
+      - !Ref MIGEngGroup
+      - !Ref SecAdminGroup

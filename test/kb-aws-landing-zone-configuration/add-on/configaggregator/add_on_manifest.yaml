@@ -1,0 +1,21 @@
+---
+# Landing Zone Service Primary Account
+organizational_units:
+  - name: core
+    core_accounts:
+      - name: primary
+        core_resources:
+          - name: ConfigAggregatorService
+            template_file: templates/core_accounts/aws-landing-zone-config-aggregator-service.template
+            parameter_file: parameters/core_accounts/aws-landing-zone-config-aggregator-service.json
+            deploy_method: stack_set
+
+# Landing Zone Service Baseline Resources
+baseline_resources:
+  - name: ConfigAggregator
+    baseline_products:
+      - AWS-Landing-Zone-Account-Vending-Machine
+    template_file: templates/aws_baseline/aws-landing-zone-config-aggregator.template
+    parameter_file: parameters/aws_baseline/aws-landing-zone-config-aggregator.json
+    deploy_method: stack_set
+

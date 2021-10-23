@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Provision default IAM policy and role for all accounts
+   Policy - emp-policy, engineer-policy
+   Role - administrator, readonly, engineer, iam-admin
+
+Parameters:
+  NamingConvention:
+    Type: String
+    Description: Role Name starts with this.
+  LoginAccountId:
+    Type: String
+    Description: IAM User Login account
+
+Resources:
+  
+  AdministratorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${NamingConvention}-com-administrator
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            AWS:
+            - !Sub "arn:aws:iam::${LoginAccountId}:root"
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+       - "arn:aws:iam::aws:policy/AdministratorAccess"
+
+  ReadOnlyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${NamingConvention}-com-readonly
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            AWS:
+            - !Sub "arn:aws:iam::${LoginAccountId}:root"
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+       - "arn:aws:iam::aws:policy/ReadOnlyAccess"
+
+  IAMAdminRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${NamingConvention}-com-iam-admin
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            AWS:
+            - !Sub "arn:aws:iam::${LoginAccountId}:root"
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+       - "arn:aws:iam::aws:policy/IAMFullAccess"
+  
+  MigEngineerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${NamingConvention}-mig-engineer
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            AWS:
+            - !Sub "arn:aws:iam::${LoginAccountId}:root"
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+       - "arn:aws:iam::aws:policy/PowerUserAccess"
+  
+  DenyAllFromOutside:
+    Type: AWS::IAM::Policy
+    DependsOn:
+      - AdministratorRole
+      - ReadOnlyRole
+      - IAMAdminRole
+      - MigEngineerRole
+    Properties: 
+      PolicyName: !Sub ${NamingConvention}-com-deny-all
+      PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: DenyAllWhenConnectionFromUnknownIP
+              Effect: Deny
+              Action: "*"           
+              Resource: "*"
+              Condition: 
+                NotIpAddress: 
+                  aws:SourceIp: 
+                    - 210.92.173.101/32
+                Bool: 
+                  aws:ViaAWSService: "false"
+      Roles:
+      - !Ref AdministratorRole
+      - !Ref ReadOnlyRole
+      - !Ref IAMAdminRole
+      - !Ref MigEngineerRole
+ 

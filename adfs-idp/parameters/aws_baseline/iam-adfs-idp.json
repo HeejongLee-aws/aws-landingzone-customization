@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey" : "SamlProviderName",
+    "ParameterValue" : {{SamlProviderName}}
+  },
+  {
+    "ParameterKey": "UploadBucket",
+    "ParameterValue": {{UploadBucket}}
+  },
+  {
+    "ParameterKey": "MetadataFile",
+    "ParameterValue": {{MetadataFile}}
+  }
+]

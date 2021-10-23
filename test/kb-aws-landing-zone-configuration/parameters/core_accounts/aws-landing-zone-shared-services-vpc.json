@@ -1,0 +1,92 @@
+[
+    {
+        "ParameterKey": "AvailabilityZones",
+        "ParameterValue": "$[alfred_genaz_2]",
+        "ssm_parameters": [
+        {
+          "name": "/org/member/sharedservices/primary_vpc/az_list",
+          "value": "$[AZ]"
+        }
+      ]
+    },
+    {
+        "ParameterKey": "NumberOfAZs",
+        "ParameterValue": "2"
+    },
+    {
+        "ParameterKey": "CreateAdditionalPrivateSubnets",
+        "ParameterValue": "false"
+    },
+    {
+        "ParameterKey": "CreatePrivateSubnets",
+        "ParameterValue": "true"
+    },
+    {
+        "ParameterKey": "CreatePublicSubnets",
+        "ParameterValue": "true"
+    },
+    {
+        "ParameterKey": "PrivateSubnet1ACIDR",
+        "ParameterValue": "10.210.20.128/26"
+    },
+    {
+        "ParameterKey": "PrivateSubnet1BCIDR",
+        "ParameterValue": "None"
+    },
+    {
+        "ParameterKey": "PrivateSubnet2ACIDR",
+        "ParameterValue": "10.210.20.192/26"
+    },
+    {
+        "ParameterKey": "PrivateSubnet2BCIDR",
+        "ParameterValue": "None"
+    },
+    {
+        "ParameterKey": "PrivateSubnet3ACIDR",
+        "ParameterValue": "None"
+    },
+    {
+        "ParameterKey": "PrivateSubnet3BCIDR",
+        "ParameterValue": "None"
+    },
+    {
+        "ParameterKey": "PrivateSubnet4ACIDR",
+        "ParameterValue": "None"
+    },
+    {
+        "ParameterKey": "PrivateSubnet4BCIDR",
+        "ParameterValue": "None"
+    },
+    {
+        "ParameterKey": "PublicSubnet1CIDR",
+        "ParameterValue": "10.210.20.0/26"
+    },
+    {
+        "ParameterKey": "PublicSubnet2CIDR",
+        "ParameterValue": "10.210.20.64/26"
+    },
+    {
+        "ParameterKey": "PublicSubnet3CIDR",
+        "ParameterValue": "None"
+    },
+    {
+        "ParameterKey": "PublicSubnet4CIDR",
+        "ParameterValue": "None"
+    },
+    {
+        "ParameterKey": "VPCCIDR",
+        "ParameterValue": "10.210.20.0/24"
+    },
+    {
+        "ParameterKey": "TransitVPC",
+        "ParameterValue": "false"
+    },
+    {
+        "ParameterKey": "LogsRetentionInDays",
+        "ParameterValue": "90"
+    },
+    {
+        "ParameterKey": "ManagedResourcePrefix",
+        "ParameterValue": "aws-landing-zone"
+    }
+]

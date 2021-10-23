@@ -1,0 +1,14 @@
+---
+# Landing Zone Service Baseline Resources
+baseline_resources:
+  - name: ADFSIDP
+    # This resource is part of which baseline(s) product
+    baseline_products:
+      {%- for avm_product in avm_products %} 
+      - {{ avm_product }} 
+      {%- endfor %}
+    template_file: templates/aws_baseline/iam-adfs-idp.yaml
+    parameter_file: parameters/aws_baseline/iam-adfs-idp.json
+    deploy_method: stack_set
+
+  

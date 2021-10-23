@@ -1,0 +1,150 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Enables ADFS Roles.
+
+Parameters:
+  SamlProviderName:
+    Default: ADFS
+    Description: Name of the SAML Provider configured for Federation
+    Type: String
+  UploadBucket:
+    Description: Bucket location of the metadata file
+    Type: String
+  MetadataFile:
+    Type: String
+    Description: The XML metadata document to use when trusting the Identity Provider
+#  AccountName:
+#    Description: AccountName in the parameter store.
+#    Type: AWS::SSM::Parameter::Value<String>
+#    Default: /org/member/account_name
+
+Resources:
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+      - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: SamlProviderLambdaPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                  - 's3:GetObjectAcl'
+                #Resource: "*"
+                Resource: !Join ["/",[!Join [":",["arn:aws:s3:::",!Ref UploadBucket]],!Ref MetadataFile]]
+              - Effect: Allow
+                Action:
+                  - iam:CreateSamlProvider
+                  - iam:DeleteSAMLProvider
+                  - iam:GetSAMLProvider
+                  - iam:ListSAMLProviders
+                  - iam:UpdateSAMLProvider
+                Resource: !Sub "arn:aws:iam::${AWS::AccountId}:saml-provider/*"
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource: "arn:aws:kms:us-east-1:009697601415:key/0ff8e5d4-437f-4f31-91ad-0e6d5732e39b"
+              
+
+  ProviderCreator:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python2.7
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 30
+      Code:
+        ZipFile: !Sub |
+          import boto3
+          from botocore.exceptions import ClientError
+          import json
+          import cfnresponse
+          iam = boto3.client("iam")
+          s3 = boto3.resource("s3")
+          def create_provider(name, doc):
+            try:
+              resp = iam.create_saml_provider(SAMLMetadataDocument=doc,Name=name)
+              return(True, resp['SAMLProviderArn'])
+            except Exception as e:
+              return (False, "Cannot create SAML provider: " + str(e))
+          def delete_provider(arn):
+            try:
+              resp = iam.delete_saml_provider(SAMLProviderArn=arn)
+              return (True, "SAML provider with ARN " + arn + " deleted")
+            except ClientError as e:
+              if e.response['Error']['Code'] == "NoSuchEntity":
+                # no need to delete a thing that doesn't exist
+                return (True, "SAML provider with ARN " + arn + " does not exist, deletion succeeded")
+              else:
+                return (False, "Cannot delete SAML provider with ARN " + arn + ": " + str(e))
+            except Exception as e:
+              return (False, "Cannot delete SAML provider with ARN " + arn + ": " + str(e))
+          def update_provider(arn, doc):
+            try:
+              resp = iam.update_saml_provider(SAMLMetadataDocument=doc, SAMLProviderArn=arn)
+              return (True, "SAML provider " + arn + " updated")
+            except Exception as e:
+              return (False, "Cannot update SAML provider " + arn + ": " + str(e))
+
+          def lambda_handler(event, context):
+            print("Received event: " + json.dumps(event))
+            # provider_xml = event['ResourceProperties']['Metadata']
+            try:
+              print('try to get object from s3')
+              obj = s3.Object(event['ResourceProperties']['UploadBucket'], event['ResourceProperties']['MetadataFile'])
+              provider_xml = obj.get()['Body'].read().decode('utf-8') 
+              print('response xml: ' + provider_xml)
+              provider_name = event['ResourceProperties']['SamlProviderName']
+            # provider_name = event['ResourceProperties']['Name']
+            # create a default ARN from the name; will be overwritten if we are creating
+              provider_arn = "arn:aws:iam::${AWS::AccountId}:saml-provider/" + provider_name
+            except Exception as e:
+              return cfnresponse.send(event, context, cfnresponse.FAILED, e.response)
+
+            if event['RequestType'] == 'Create':
+              print("CreateEvent")
+              res, provider_arn = create_provider(provider_name, provider_xml)
+              reason = "Creation succeeded"
+            elif event['RequestType'] == 'Update':
+              print("UpdateEvent")
+              res, reason = update_provider(provider_arn, provider_xml)
+            elif event['RequestType'] == 'Delete':
+              print("DeleteEvent")
+              res, reason = delete_provider(provider_arn)
+            else:
+              res = False
+              reason = "Unknown operation: " + event['RequestType']
+            responseData = {}
+            responseData['Reason'] = reason
+            if res:
+              return cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, provider_arn)
+            else:
+              return cfnresponse.send(event, context, cfnresponse.FAILED, responseData, provider_arn)
+
+  IdentityProvider:
+    Type: Custom::IdentityProvider
+    DependsOn: ProviderCreator
+    Properties:
+      ServiceToken: !GetAtt ProviderCreator.Arn
+      Region: !Ref "AWS::Region"
+      MetadataFile: !Ref MetadataFile
+      UploadBucket: !Ref UploadBucket
+      SamlProviderName: !Ref SamlProviderName
+      AccountID: !Ref "AWS::AccountId"
+
+
+  
+        

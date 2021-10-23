@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Provision default IAM policy and role for all accounts
+   Policy - emp-policy, engineer-policy
+   Role - administrator, readonly, engineer, iam-admin
+
+Parameters:
+  NamingConvention:
+    Type: String
+    Description: Role Name starts with this.
+  LoginAccountId:
+    Type: String
+    Description: IAM User Login account
+
+
+Resources:
+  #Deny all permission when user login from specific IP Range
+  DenyAllFromOutsideInSecAccount:
+    Type: AWS::IAM::Policy
+    DependsOn: SecAdminRoleInSecAccount
+    Properties: 
+      PolicyName: !Sub ${NamingConvention}-com-deny-all
+      PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: DenyAllWhenConnectionFromUnknownIP
+              Effect: Deny
+              Action: "*"           
+              Resource: "*"
+              Condition: 
+                NotIpAddress: 
+                  aws:SourceIp: 
+                    - 210.92.173.101/32
+                Bool: 
+                  aws:ViaAWSService: "false"
+      Roles:
+       - !Ref SecAdminRoleInSecAccount
+
+  SecAdminRolePolicyInSecAccount:
+    Type: AWS::IAM::Policy
+    DependsOn: SecAdminRoleInSecAccount
+    Properties: 
+      PolicyName: !Sub ${NamingConvention}-com-sec-admin-policy
+      PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: KMSAdministrator
+              Effect: Allow
+              Action:
+                - kms:CreateAlias
+                - kms:CreateKey
+                - kms:DescribeKey
+                - kms:EnableKey
+                - kms:EnableKeyRotation
+                - kms:ListAliases
+                - kms:ListGrants
+                - kms:ListKeyPolicies
+                - kms:ListKeys
+                - kms:ListResourceTags
+                - kms:ListRetirableGrants
+                - kms:PutKeyPolicy
+                - kms:UpdateKeyDescription
+                - kms:UpdateAlias
+                - kms:RevokeGrant
+                - kms:DisableKey
+                - kms:DisableKeyRotation
+                - kms:GetKeyPolicy
+                - kms:GetKeyRotationStatus
+                - kms:DeleteAlias
+                - kms:ScheduleKeyDeletion
+                - kms:CancelKeyDeletion
+                - kms:TagResource
+                - kms:UntagResource
+              Resource: "*"
+      Roles:
+        - !Ref SecAdminRoleInSecAccount
+
+  #Security Admin Role in Security Account
+  SecAdminRoleInSecAccount:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: !Sub ${NamingConvention}-com-sec-admin
+        AssumeRolePolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal:
+                AWS:
+                - !Sub "arn:aws:iam::${LoginAccountId}:root"
+              Action:
+              - sts:AssumeRole
+        Path: "/"
+        ManagedPolicyArns:
+          - "arn:aws:iam::aws:policy/ReadOnlyAccess"
+          - "arn:aws:iam::aws:policy/AmazonGuardDutyFullAccess"
+
+  

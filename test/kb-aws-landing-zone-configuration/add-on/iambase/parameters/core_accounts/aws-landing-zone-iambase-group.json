@@ -1,0 +1,10 @@
+[
+  {
+    "ParameterKey": "NamingConvention",
+    "ParameterValue": {{ NamingConvention }}
+  },
+  {
+    "ParameterKey": "LoginAccountId",
+    "ParameterValue": {{ LoginAccountId }}
+  }
+]

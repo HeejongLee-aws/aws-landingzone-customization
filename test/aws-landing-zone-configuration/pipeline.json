@@ -1,0 +1,216 @@
+{
+    "pipeline": {
+        "roleArn": "arn:aws:iam::252069785039:role/LandingZoneCodePipelineRole", 
+        "stages": [
+            {
+                "name": "Source", 
+                "actions": [
+                    {
+                        "inputArtifacts": [], 
+                        "name":"Source",
+                        "region": "ap-northeast-2", 
+                        "actionTypeId": {
+                            "category": "Source", 
+                            "owner": "AWS", 
+                            "version": "1", 
+                            "provider": "S3"
+                        }, 
+                        "outputArtifacts": [
+                            {
+                                "name": "SourceApp"
+                            }
+                        ], 
+                        "configuration": {
+                            "S3Bucket":"aws-landing-zone-configuration-252069785039-ap-northeast-2",
+                            "S3ObjectKey":"aws-landing-zone-configuration.zip"
+                        }, 
+                        "runOrder": 1
+                    }
+                ]
+            }, 
+            {
+                "name": "Build", 
+                "actions": [
+                    {
+                        "inputArtifacts": [
+                            {
+                                "name": "SourceApp"
+                            }
+                        ], 
+                        "name": "CodeBuild", 
+                        "actionTypeId": {
+                            "category": "Build", 
+                            "owner": "AWS", 
+                            "version": "1", 
+                            "provider": "CodeBuild"
+                        }, 
+                        "outputArtifacts": [
+                            {
+                                "name": "BuiltApp"
+                            }
+                        ], 
+                        "configuration": {
+                            "ProjectName": "AWS-Landing-Zone-CodeBuild"
+                        }, 
+                        "runOrder": 1
+                    }
+                ]
+            }, 
+            {
+                "name": "CoreAccounts", 
+                "actions": [
+                    {
+                        "inputArtifacts": [
+                            {
+                                "name": "BuiltApp"
+                            }
+                        ], 
+                        "name": "Deploy", 
+                        "actionTypeId": {
+                            "category": "Invoke", 
+                            "owner": "AWS", 
+                            "version": "1", 
+                            "provider": "Lambda"
+                        }, 
+                        "outputArtifacts": [], 
+                        "configuration": {
+                            "FunctionName": "LandingZoneStateMachineTriggerLambda", 
+                            "UserParameters": "{\"pipeline_stage\": \"core_accounts\", \"artifact\" : \"BuiltApp\", \"exec_mode\" : \"sequential\"}"
+                        }, 
+                        "runOrder": 1
+                    }
+                ]
+            }, 
+            {
+                "name": "ServiceControlPolicy", 
+                "actions": [
+                    {
+                        "inputArtifacts": [
+                            {
+                                "name": "BuiltApp"
+                            }
+                        ], 
+                        "name": "Deploy", 
+                        "actionTypeId": {
+                            "category": "Invoke", 
+                            "owner": "AWS", 
+                            "version": "1", 
+                            "provider": "Lambda"
+                        }, 
+                        "outputArtifacts": [], 
+                        "configuration": {
+                            "FunctionName": "LandingZoneStateMachineTriggerLambda", 
+                            "UserParameters": "{\"pipeline_stage\": \"service_control_policy\", \"artifact\" : \"BuiltApp\", \"exec_mode\" : \"sequential\"}"
+                        }, 
+                        "runOrder": 1
+                    }
+                ]
+            }, 
+            {
+                "name": "CoreResource", 
+                "actions": [
+                    {
+                        "inputArtifacts": [
+                            {
+                                "name": "BuiltApp"
+                            }
+                        ], 
+                        "name": "Deploy", 
+                        "actionTypeId": {
+                            "category": "Invoke", 
+                            "owner": "AWS", 
+                            "version": "1", 
+                            "provider": "Lambda"
+                        }, 
+                        "outputArtifacts": [], 
+                        "configuration": {
+                            "FunctionName": "LandingZoneStateMachineTriggerLambda", 
+                            "UserParameters": "{\"pipeline_stage\": \"core_resources\", \"artifact\" : \"BuiltApp\", \"exec_mode\" : \"sequential\"}"
+                        }, 
+                        "runOrder": 1
+                    }
+                ]
+            }, 
+            {
+                "name": "ServiceCatalog", 
+                "actions": [
+                    {
+                        "inputArtifacts": [
+                            {
+                                "name": "BuiltApp"
+                            }
+                        ], 
+                        "name": "Deploy", 
+                        "actionTypeId": {
+                            "category": "Invoke", 
+                            "owner": "AWS", 
+                            "version": "1", 
+                            "provider": "Lambda"
+                        }, 
+                        "outputArtifacts": [], 
+                        "configuration": {
+                            "FunctionName": "LandingZoneStateMachineTriggerLambda", 
+                            "UserParameters": "{\"pipeline_stage\": \"service_catalog\", \"artifact\" : \"BuiltApp\", \"exec_mode\" : \"sequential\"}"
+                        }, 
+                        "runOrder": 1
+                    }
+                ]
+            }, 
+            {
+                "name": "BaselineResource", 
+                "actions": [
+                    {
+                        "inputArtifacts": [
+                            {
+                                "name": "BuiltApp"
+                            }
+                        ], 
+                        "name": "Deploy", 
+                        "actionTypeId": {
+                            "category": "Invoke", 
+                            "owner": "AWS", 
+                            "version": "1", 
+                            "provider": "Lambda"
+                        }, 
+                        "outputArtifacts": [], 
+                        "configuration": {
+                            "FunctionName": "LandingZoneStateMachineTriggerLambda", 
+                            "UserParameters": "{\"pipeline_stage\": \"baseline_resources\", \"artifact\" : \"BuiltApp\", \"exec_mode\" : \"sequential\"}"
+                        }, 
+                        "runOrder": 1
+                    }
+                ]
+            }, 
+            {
+                "name": "LaunchAVM", 
+                "actions": [
+                    {
+                        "inputArtifacts": [
+                            {
+                                "name": "BuiltApp"
+                            }
+                        ], 
+                        "name": "CodeBuild", 
+                        "actionTypeId": {
+                            "category": "Build", 
+                            "owner": "AWS", 
+                            "version": "1", 
+                            "provider": "CodeBuild"
+                        }, 
+                        "outputArtifacts": [], 
+                        "configuration": {
+                            "ProjectName": "AWS-Landing-Zone-LaunchAVM-CodeBuild"
+                        }, 
+                        "runOrder": 1
+                    }
+                ]
+            }
+        ], 
+        "artifactStore": {
+            "type": "S3", 
+            "location": "kb-landingzone-base-landingzonepipelineartifacts3-ml7e4scda1i0"
+        }, 
+        "name": "AWS-Landing-Zone-CodePipeline", 
+        "version": 2
+    } 
+}

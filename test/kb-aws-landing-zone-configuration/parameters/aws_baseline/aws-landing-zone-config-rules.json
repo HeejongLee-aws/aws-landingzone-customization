@@ -1,0 +1,138 @@
+[
+  {
+    "ParameterKey": "EnableEncryptedVolumesRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableRdsEncryptionRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableS3PublicReadRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableS3PublicWriteRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableS3ServerSideEncryptionRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableRestrictedCommonPortsRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableRestrictedSshRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "KMSId",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "MaximumExecutionFrequency",
+    "ParameterValue": "TwentyFour_Hours"
+  },
+  {
+    "ParameterKey": "blockedPort1",
+    "ParameterValue": "20"
+  },
+  {
+    "ParameterKey": "blockedPort2",
+    "ParameterValue": "21"
+  },
+  {
+    "ParameterKey": "blockedPort3",
+    "ParameterValue": "3389"
+  },
+  {
+    "ParameterKey": "blockedPort4",
+    "ParameterValue": "3306"
+  },
+  {
+    "ParameterKey": "blockedPort5",
+    "ParameterValue": "4333"
+  },
+  {
+    "ParameterKey": "EnableRootAccessKeyCheckRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableIamUserMfaCheckRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableMfaConsoleLoginCheckRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableUnusedCredentialCheckRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableAccesskeyRotateCheckRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableS3BucketLoggingCheckRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableCoudtrailS3DataeventsRule",
+    "ParameterValue": "false"
+  },
+  {
+    "ParameterKey": "EnableS3BucketSslRequestsOnlyRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableELBLoggingRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableELBDelProtectionRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableDefaultSGClosedRule",
+    "ParameterValue": "false"
+  },
+  {
+    "ParameterKey": "CloudTrailCloudWatchLogsEnabledRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "CloudTrailEnabledRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "CloudTrailLogFileValidayionEnabledRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "CMKBackingKeyRotationEnabledRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EC2StoppedInstanceRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EC2SecurityGroupAttachedToENIRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "IAMPolicyNoStatementsWithAdminAccessRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableEFSEncryptedRule",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableVPCFlowLogCheckRule",
+    "ParameterValue": "true"
+  }
+]

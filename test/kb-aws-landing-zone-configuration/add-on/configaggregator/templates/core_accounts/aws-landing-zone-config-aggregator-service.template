@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Updates Config Aggregator configuration on a scheduled basis to ensure all accounts/regions are included.
+
+Parameters:
+  SecurityAccountId:
+    Type: String
+    Default: ''
+    Description: >
+      The Amazon GuardDuty master account ID.
+Resources:
+  ConfigAggregatorLambda: 
+    Type: "AWS::Lambda::Function"
+    Properties: 
+      Handler: "index.lambda_handler"
+      Role: !Join
+              - ':'
+              - - 'arn:aws:iam:'
+                - !Ref 'AWS::AccountId'
+                - 'role/StateMachineLambdaRole'
+      Code: 
+        ZipFile: !Sub |
+            import boto3
+            import os
+            import json
+            import time
+            import logging
+            from botocore.exceptions import ClientError
+            LOGGER = logging.getLogger()
+            LOGGER.setLevel(logging.INFO)
+            session = boto3.Session()
+            def get_account_list():
+                """
+                Gets a list of Active AWS Accounts in the Organization.
+                This is called if the function is not executed by an Sns trigger and is used
+                for periodic scheduling to ensure all accounts are correctly configured, and
+                prevent gaps in security from activities like new regions being added or GuardDuty
+                being disabled.
+                """
+                aws_account_dict = dict()
+                #Get list of accounts in org
+                orgclient = session.client('organizations',region_name='us-east-1')
+                accounts = orgclient.list_accounts()
+                while 'NextToken' in accounts:
+                    accountsnexttoken=accounts['NextToken']
+                    moreaccounts = orgclient.list_accounts(NextToken=accountsnexttoken)
+                    accounts = moreaccounts['Accounts'].append(accounts['Accounts'])
+                LOGGER.debug(accounts)
+                for account in accounts['Accounts']:
+                    LOGGER.debug(account)
+                    #Filter out suspended accounts and save valid accounts in a dict
+                    if account['Status'] == 'ACTIVE':
+                        accountid = account['Id']
+                        email = account['Email']
+                        aws_account_dict.update({accountid:email})
+                return aws_account_dict
+            def assume_role(aws_account_number, role_name):
+                """
+                Assumes the provided role in each account and returns a Config client
+                :param aws_account_number: AWS Account Number
+                :param role_name: Role to assume in target account
+                :param aws_region: AWS Region for the Client call, not required for IAM calls
+                :return: Config client in the specified AWS Account and Region
+                """
+            
+                # Beginning the assume role process for account
+                sts_client = boto3.client('sts')
+                # Get the current partition
+                partition = sts_client.get_caller_identity()['Arn'].split(":")[1]
+                response = sts_client.assume_role(
+                    RoleArn='arn:{}:iam::{}:role/{}'.format(
+                        partition,
+                        aws_account_number,
+                        role_name
+                    ),
+                    RoleSessionName='EnableConfigAggregator'
+                )
+                # Storing STS credentials
+                session = boto3.Session(
+                    aws_access_key_id=response['Credentials']['AccessKeyId'],
+                    aws_secret_access_key=response['Credentials']['SecretAccessKey'],
+                    aws_session_token=response['Credentials']['SessionToken']
+                )
+                LOGGER.debug("Assumed session for {}.".format(
+                    aws_account_number
+                ))
+            
+                return session
+            def lambda_handler(event, context):
+                LOGGER.debug('REQUEST RECEIVED:\n %s', event)
+                LOGGER.debug('REQUEST RECEIVED:\n %s', context)
+                session = boto3.session.Session()
+                aws_account_dict = dict()
+                aws_account_dict = get_account_list()
+                session = assume_role(os.environ['master_account'],os.environ['assume_role'])
+                configclient = session.client('config')
+                updateconfig = configclient.put_configuration_aggregator(
+                    ConfigurationAggregatorName="LandingZoneAggregator",
+                    AccountAggregationSources=[
+                        {
+                            'AccountIds': list(aws_account_dict.keys()),
+                            'AllAwsRegions': True
+                        }
+                    ])
+                LOGGER.debug(updateconfig)
+                return(True)
+      Runtime: "python3.6"
+      Timeout: 300
+      Environment:
+        Variables:
+            assume_role: AWSCloudFormationStackSetExecutionRole
+            master_account: !Sub ${SecurityAccountId}
+
+  ScheduledRule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "DailyLambdaTrigger"
+      ScheduleExpression: "rate(1 day)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: !GetAtt ConfigAggregatorLambda.Arn
+          Id: "DailyInvite"
+
+  PermissionForEventsToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !GetAtt ConfigAggregatorLambda.Arn
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt ScheduledRule.Arn

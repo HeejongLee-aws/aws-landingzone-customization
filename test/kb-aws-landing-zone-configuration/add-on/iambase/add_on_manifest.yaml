@@ -1,0 +1,29 @@
+---       
+
+# Landing Zone Service Primary Account
+organizational_units:
+  - name: core
+    core_accounts:
+      - name: iam-admin
+        core_resources:
+          - name: IAM-User-Groups
+            template_file: templates/core_accounts/aws-landing-zone-iambase-group.template
+            parameter_file: parameters/core_accounts/aws-landing-zone-iambase-group.json
+            deploy_method: stack_set
+  - name: core
+    core_accounts:
+      - name: security
+        core_resources:
+          - name: IAM-SEC-Admin
+            template_file: templates/core_accounts/aws-landing-zone-sec-iambase.template
+            parameter_file: parameters/core_accounts/aws-landing-zone-sec-iambase.json
+            deploy_method: stack_set
+# Landing Zone Service Baseline Resources
+baseline_resources:
+  - name: IAMBase
+    # This resource is part of which baseline(s) product
+    baseline_products:
+      - AWS-Landing-Zone-Account-Vending-Machine
+    template_file: templates/aws_baseline/aws-landing-zone-iambase.template
+    parameter_file: parameters/aws_baseline/aws-landing-zone-iambase.json
+    deploy_method: stack_set

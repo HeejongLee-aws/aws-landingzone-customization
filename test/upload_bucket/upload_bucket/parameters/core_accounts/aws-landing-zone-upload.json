@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "OrganizationId",
+    "ParameterValue": {{ OrganizationId }}
+  },
+  {
+    "ParameterKey": "SSEAlgorithm",
+    "ParameterValue": {{ SSEAlgorithm }}
+  },
+  {
+    "ParameterKey": "KMSMasterKeyID",
+    "ParameterValue": {{ KMSMasterKeyID }}
+  }
+]

@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Enable Config aggregation.  This builds the base aggregator, and an aggregator authorization in each account, but the accounts need to be added to the aggregator via a Lambda function that will run periodically to ensure all accounts/regions are enabled.
+
+Parameters:
+  SecurityAccountId:
+    Type: String
+    Default: ''
+    Description: What is the Account Id of the security account where config reports will be aggregated?
+  MainRegion:
+    Type: String
+    Default: ''
+    Description: In which region is the Aggregator created?
+Conditions:
+  InSecurityAccount:
+    !Equals
+      - !Sub ${AWS::AccountId}
+      - !Ref SecurityAccountId
+Resources:
+  AggregatorAuth:
+    Type: AWS::Config::AggregationAuthorization
+    DeletionPolicy: Retain
+    Properties:
+      AuthorizedAccountId: !Ref SecurityAccountId
+      AuthorizedAwsRegion: !Ref MainRegion
+
+  Aggregator:
+    Type: AWS::Config::ConfigurationAggregator
+    Condition: InSecurityAccount
+    Properties:
+      AccountAggregationSources: 
+        - AccountIds: 
+            - !Ref SecurityAccountId
+          AllAwsRegions: true
+      ConfigurationAggregatorName: LandingZoneAggregator

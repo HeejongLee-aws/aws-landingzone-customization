@@ -1,0 +1,82 @@
+[
+  {
+    "ParameterKey": "LogGroupName",
+    "ParameterValue": "CloudTrail/Landing-Zone-Logs"
+  },
+  {
+    "ParameterKey": "EnableSecurityGroupChangeAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableNetworkAclChangeAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableGatewayChangeAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableVpcChangeAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableEc2InstanceChangeAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableEc2LargeInstanceChangeAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableCloudTrailChangeAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableConsoleSignInFailureAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableAuthorizationFailureAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableIamPolicyChangesAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableRootLoginAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "SNSNotificationTopic",
+    "ParameterValue": "/org/member/local_sns_arn"
+  },
+  {
+    "ParameterKey": "EnableSCPChangeAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableLoginWithoutMFAAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableCMKChangesAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableS3BucketConfigChangesAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableConfigChangesAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableRouteTableChangesAlarm",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "EnableTransitGatewayChangesAlarm",
+    "ParameterValue": "true"
+  }
+]

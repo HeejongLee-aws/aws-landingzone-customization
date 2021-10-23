@@ -1,0 +1,9 @@
+input_parameters:
+  - file_name: add_on_manifest.yaml
+    parameters:
+      avm_products: ['AWS-Landing-Zone-Account-Vending-Machine']
+  - file_name: parameters/aws_baseline/iam-adfs-idp.json
+    parameters:
+      UploadBucket: 'mastersharedbucket'
+      SamlProviderName: 'KBADFS'
+      MetadataFile: 'metadata.xml'

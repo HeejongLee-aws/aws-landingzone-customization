@@ -1,0 +1,81 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "BlockDeleteLandingZoneBucket",
+			"Action": [
+				"s3:DeleteBucket"
+			],
+			"Resource": [
+				"arn:aws:s3:::aws-landing-zone*"
+			],
+			"Effect": "Deny"
+		},
+		{
+			"Sid": "RestrictRegions",
+			"Effect": "Deny",
+			"NotAction": [
+        "a4b:*",
+        "acm:*",
+        "aws-marketplace:*",
+        "budgets:*",
+        "ce:*",
+        "cloudfront:*",
+        "cur:*",
+        "directconnect:*",
+        "globalaccelerator:*",
+        "health:*",
+        "iam:*",
+        "importexport:*",
+        "mobileanalytics:*",
+        "organizations:*",
+        "route53:*",
+        "route53domains:*",
+        "s3:ListAllMyBuckets",
+        "shield:*",
+        "pricing:*",
+        "savingsplans:*",
+        "sso:*",
+        "sts:*",
+        "support:*",
+        "trustedadvisor:*",
+        "waf:*",
+        "wellarchitected:*"
+			],
+			"Resource": "*",
+			"Condition": {
+				"StringNotEquals": {
+					"aws:RequestedRegion": [
+						"ap-northeast-2"
+					]
+				}
+			}
+    },
+    {
+      "Sid": "RestrictKMSManagement",
+      "Effect": "Deny",
+      "Action": [
+          "kms:Create*"
+      ],
+      "Resource": "*",
+      "Condition": {
+          "ArnNotLike": {
+              "aws:PrincipalARN": "arn:aws:iam::485043391108:role/kb-com-sec-admin*"
+          },
+          "BoolIfExists": {
+              "aws:ViaAWSService": "false"
+          }
+      }
+    },
+    {
+      "Sid": "DenyonKMSKeyDeletion",
+      "Effect": "Deny",
+      "Action": [
+        "kms:DisableKey",
+        "kms:DeleteAlias",
+        "kms:ScheduleKeyDeletion"
+      ],
+      "Resource": "*"
+    }
+	]
+}

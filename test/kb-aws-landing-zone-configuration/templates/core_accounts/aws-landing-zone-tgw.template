@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Transit Gateway with VPN attached 
+
+Parameters:
+
+  ShareWithOrg: 
+    Type: String
+    Default: 'false'
+    AllowedValues: 
+      - true
+      - false
+  OrgId: 
+    Type: String
+    Description: Organization Id
+  
+  masterAccountId:
+    Type: String
+    Description: Organization Master Account Id
+
+Conditions:
+  EnableRAM: !Equals
+      - !Ref ShareWithOrg
+      - true
+
+Resources: 
+
+  TransitGateway:
+    Type: AWS::EC2::TransitGateway
+    Properties:
+      AutoAcceptSharedAttachments: enable
+      DefaultRouteTableAssociation: disable
+      DefaultRouteTablePropagation: disable
+      Description: TransitGateway
+      DnsSupport: enable
+      VpnEcmpSupport: enable
+      Tags: 
+        - Key: Name
+          Value: 'tgw-pcm-prd'
+
+  TGWShare:
+    Type: "AWS::RAM::ResourceShare"
+    DependsOn: TransitGateway
+    Condition: EnableRAM
+    Properties:
+      AllowExternalPrincipals: true
+      Name: TGW-Org-Share
+      Principals: 
+        - !Sub 'arn:aws:organizations::${masterAccountId}:organization/${OrgId}'
+      ResourceArns: 
+        - !Sub 'arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:transit-gateway/${TransitGateway}'
+
+Outputs:
+
+  TransitGatewayId: 
+    Description: 'TransitGateway Id'
+    Value: !Ref TransitGateway
+

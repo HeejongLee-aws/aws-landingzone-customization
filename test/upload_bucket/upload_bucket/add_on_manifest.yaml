@@ -1,0 +1,19 @@
+---
+# Landing Zone Core Account Structure 
+organizational_units: 
+  # Landing Zone OU for Core accounts 
+  - name: {{ core_ou }} 
+    core_accounts: 
+      - name: {{ core_account }} 
+        core_resources: 
+          - name: LandingZoneUploadBucket 
+            template_file: templates/core_accounts/aws-landing-zone-upload.template 
+            parameter_file: parameters/core_accounts/aws-landing-zone-upload.json 
+            deploy_method: stack_set 
+            ssm_parameters: 
+              - name: /org/primary/uploadbucket
+                value: $[output_BucketName] 
+            regions: 
+              - {{ region }}
+
+  

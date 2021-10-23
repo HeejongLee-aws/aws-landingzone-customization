@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "ShareWithOrg",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "OrgId",
+    "ParameterValue": "$[alfred_ssm_/org/primary/organization_id]"
+  },
+  {
+    "ParameterKey": "masterAccountId",
+    "ParameterValue": "$[alfred_ssm_/org/primary/account_id]"
+  }
+]
